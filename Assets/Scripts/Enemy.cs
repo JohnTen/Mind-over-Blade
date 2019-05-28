@@ -21,7 +21,7 @@ public class Enemy : PhysicalMover
 	public bool Stuned => stuned;
 	public int State => state;
 
-	public void Hit(Vector3 hitDirection)
+	public void Hit(Vector3 hitDirection, float force)
 	{
 		if (stuned) return;
 
@@ -35,7 +35,7 @@ public class Enemy : PhysicalMover
 
 		stuned = true;
 		StartCoroutine(BeenHit());
-		rigidBody.AddForce(hitDirection * hitBackForce, ForceMode2D.Impulse);
+		rigidBody.AddForce(hitDirection * hitBackForce * force, ForceMode2D.Impulse);
 	}
 
 	private void Update()

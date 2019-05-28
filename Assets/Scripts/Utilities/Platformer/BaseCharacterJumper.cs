@@ -10,7 +10,7 @@ namespace UnityUtility.Platformer
 
 		protected virtual bool GetJumpingCommand()
 		{
-			return Input.GetButton("Jump");
+			return Input.GetButtonDown("Jump");
 		}
 
 		protected virtual bool IsJumpable(Vector3 vector)

@@ -13,14 +13,17 @@ public enum KnifeState
 public class Knife : MonoBehaviour
 {
 	[SerializeField] Sheath sheath;
+	[SerializeField] float bladeLength;
 	[SerializeField] float speed;
 	[SerializeField] float actionDelay;
 	[SerializeField] float backDistance;
 	[SerializeField] float sinkingLength;
+	[SerializeField] float hoveringDistance;
 	[SerializeField] float hoveringRotateSpeed;
 	[SerializeField] float hoveringDuration;
 	[SerializeField] float dragForce;
 	[Space(30)]
+	[SerializeField] float traveledDistance;
 	[SerializeField] bool changedDirection;
 	[SerializeField] bool hovered;
 	[SerializeField] bool returning;
@@ -28,6 +31,7 @@ public class Knife : MonoBehaviour
 	[SerializeField] float hoverTimer;
 	[SerializeField] KnifeState state;
 	[SerializeField] Enemy hittedEnemy;
+	[SerializeField] bool piercing;
 
 	public KnifeState State
 	{
@@ -70,10 +74,11 @@ public class Knife : MonoBehaviour
 		this.sheath = sheath;
 	}
 
-	public bool Launch(Vector3 direction)
+	public bool Launch(Vector3 direction, bool isPiercing = false)
 	{
 		if (state != KnifeState.InSheath) return false;
 
+		piercing = isPiercing;
 		actionTimer = actionDelay;
 		state = KnifeState.Flying;
 
@@ -102,9 +107,11 @@ public class Knife : MonoBehaviour
 	public bool Hover()
 	{
 		if (hovered ||
+			returning ||
 			state != KnifeState.Flying ||
 			actionTimer > 0) return false;
 
+		piercing = false;
 		hovered = true;
 		actionTimer = actionDelay;
 		state = KnifeState.Hover;
@@ -125,7 +132,7 @@ public class Knife : MonoBehaviour
 		if (hittedEnemy != null)
 		{
 			var dir = (sheath.transform.position - transform.position).normalized;
-			hittedEnemy.Hit(dir);
+			hittedEnemy.Hit(dir, 0.8f);
 			hittedEnemy.AddForce(dir * dragForce);
 		}
 
@@ -144,20 +151,35 @@ public class Knife : MonoBehaviour
 			if (hit.collider.tag == "Climable")
 			{
 				StuckedOnClimbable = true;
+				state = KnifeState.Stuck;
 			}
-			if (hit.collider.tag == "Enemy")
+			else if (hit.collider.tag == "Enemy")
 			{
 				print("Enemy fly");
 				hittedEnemy = hit.collider.GetComponent<Enemy>();
-				hittedEnemy.Hit(-hit.normal);
-				transform.parent = hittedEnemy.transform;
+				hittedEnemy.Hit(-hit.normal, 1);
+				if (!piercing)
+				{
+					state = KnifeState.Stuck;
+					transform.parent = hittedEnemy.transform;
+				}
+				else
+				{
+					hittedEnemy = null;
+				}
 			}
-			state = KnifeState.Stuck;
+			else
+				state = KnifeState.Stuck;
+
 		}
 		else
 		{
 			transform.position += transform.right * speed * Time.deltaTime;
+			traveledDistance += speed * Time.deltaTime;
 		}
+
+		if (traveledDistance >= hoveringDistance)
+			Hover();
 	}
 
 	private void Returning()
@@ -174,25 +196,26 @@ public class Knife : MonoBehaviour
 			changedDirection = false;
 			hovered = false;
 			StuckedOnClimbable = false;
+			traveledDistance = 0;
 			return;
 		}
 
 		transform.right = dir;
 
-		RaycastHit hit;
-		if (Physics.Raycast(transform.position, transform.right, out hit, speed * Time.deltaTime))
+		Debug.DrawRay(transform.position, transform.right * speed * Time.deltaTime, Color.red);
+
+		RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.right, speed * Time.deltaTime);
+		if (hit.collider != null)
 		{
 			if (hit.collider.tag == "Enemy")
 			{
 				print("Enemy return");
 				var enemy = hit.collider.GetComponent<Enemy>();
-				enemy.Hit(-hit.normal);
+				enemy.Hit(-hit.normal, 1);
 			}
 		}
-		else
-		{
-			transform.position += transform.right * speed * Time.deltaTime;
-		}
+
+		transform.position += transform.right * speed * Time.deltaTime;
 	}
 
 	private void Hovering()
@@ -203,14 +226,15 @@ public class Knife : MonoBehaviour
 		if (hoverTimer > hoveringDuration)
 			Withdraw();
 
-		RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.right);
+		Debug.DrawRay(transform.position, transform.right * bladeLength, Color.red);
+		RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.right, bladeLength);
 		if (hit.collider != null)
 		{
 			if (hit.collider.tag == "Enemy")
 			{
 				print("Enemy hover");
-				hittedEnemy = hit.collider.GetComponent<Enemy>();
-				hittedEnemy.Hit(-hit.normal);
+				var enemy = hit.collider.GetComponent<Enemy>();
+				enemy.Hit(-hit.normal, 0.5f);
 			}
 		}
 	}

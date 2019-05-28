@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityUtility;
 
 public class Sheath : MonoBehaviour
 {
@@ -8,19 +9,20 @@ public class Sheath : MonoBehaviour
 	[SerializeField] Transform launchPosition;
 	[SerializeField] Transform[] sheathPositions;
 	[SerializeField] Queue<Knife> knifesInSheath;
-	[SerializeField] Queue<Knife> knifesInAir;
 	[SerializeField] List<Knife> allKnifes;
 	[SerializeField] Knife knifePrefab;
 
 	public float ReloadSpeed { get; set; } = 3;
 	public Transform LaunchPosition => launchPosition;
+	public int knifeCount => knifesInSheath.Count;
+
+	public event Action<Knife> OnRecievedKnife;
 
 	bool reloading;
 
 	private void Awake()
 	{
 		knifesInSheath = new Queue<Knife>();
-		knifesInAir = new Queue<Knife>();
 		allKnifes = new List<Knife>();
 
 		for (int i = 0; i < numberOfKnife; i++)
@@ -55,13 +57,12 @@ public class Sheath : MonoBehaviour
 		}
 	}
 
-	public Knife TakeKnife()
+	public Knife TakeKnife(bool force)
 	{
-		if (reloading || knifesInSheath.Count <= 0)
+		if ((!force && reloading) || knifesInSheath.Count <= 0)
 			return null;
 
 		StartCoroutine(ReloadKnife());
-		knifesInAir.Enqueue(knifesInSheath.Peek());
 		knifesInSheath.Peek().transform.parent = null;
 		return knifesInSheath.Dequeue();
 	}
@@ -72,12 +73,8 @@ public class Sheath : MonoBehaviour
 		knife.transform.position = sheathPositions[knifesInSheath.Count].position;
 		knife.transform.rotation = transform.rotation;
 		knifesInSheath.Enqueue(knife);
-	}
-
-	public void WithdrawLastKnife()
-	{
-		if (knifesInAir.Count <= 0) return;
-		knifesInAir.Dequeue().Withdraw();
+		if (OnRecievedKnife != null)
+			OnRecievedKnife.Invoke(knife);
 	}
 
 	IEnumerator ReloadKnife()

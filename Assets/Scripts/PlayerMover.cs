@@ -10,8 +10,29 @@ public class PlayerMover : PhysicalMover
 	[SerializeField] float speedSmoothing;
 	[SerializeField] SpriteRenderer sprite;
 	[SerializeField] ContactGroundDetector groundDetector;
+	[SerializeField] bool dashing;
 
 	public event Action<bool> OnChangeDirection;
+	public bool FacingRight => sprite.transform.eulerAngles.y == 0;
+
+	protected override void Awake()
+	{
+		base.Awake();
+		var jumper = GetComponent<PlayerJumper>();
+		jumper.OnDashingBegin += Jumper_OnDashingBegin;
+		jumper.OnDashingEnd += Jumper_OnDashingEnd;
+	}
+
+	private void Jumper_OnDashingEnd()
+	{
+		rigidBody.isKinematic = false;
+	}
+
+	private void Jumper_OnDashingBegin(Vector3 direction)
+	{
+		rigidBody.isKinematic = true;
+		rigidBody.velocity = Vector2.zero;
+	}
 
 	protected override Vector3 GetMovingDirection()
 	{
