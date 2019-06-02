@@ -5,29 +5,46 @@ using UnityUtility;
 
 public class MeleeAttack : MonoBehaviour
 {
-	[SerializeField] BoxCollider2D meleeZone;
 	[SerializeField] float meleeAttackRate;
 	[SerializeField, MinMaxSlider(0, 1)] Vector2 meleeAttackDuration;
 	[SerializeField] Animator meleeAnimator;
-	[SerializeField] Transform attackShape;
-	[SerializeField] float bladeLength;
+	[SerializeField] Transform bladeStart;
+	[SerializeField] Transform bladeEnd;
 	[Space(30)]
 	[SerializeField] float meleeAttackTimer;
-	[SerializeField] Vector3 lastAttackPosition;
+	[SerializeField] Vector3 lastAttackPositionStart;
+	[SerializeField] Vector3 lastAttackPositionEnd;
 	[SerializeField] GameObject attackedEnemy;
+	[SerializeField] PlayerMover player;
+
+	PlayerInput input;
+
+	private void Awake()
+	{
+		input = GetComponent<PlayerInput>();
+	}
 
 	private void LateUpdate()
 	{
+		if (player.Frozen && meleeAttackTimer < 0)
+			return;
+
 		if (meleeAttackTimer > 0)
 		{
 			meleeAttackTimer -= Time.deltaTime * meleeAttackRate;
+			if (meleeAttackTimer <= 0)
+			{
+				player.Frozen = false;
+			}
 		}
 
-		if (Input.GetKey(KeyCode.F) && meleeAttackTimer <= 0)
+		if (input.IsMeleePressed() && meleeAttackTimer <= 0)
 		{
+			player.Frozen = true;
 			meleeAnimator.SetBool("Attack", true);
 			meleeAttackTimer = 1;
-			lastAttackPosition = attackShape.position + attackShape.right * bladeLength;
+			lastAttackPositionStart = bladeStart.position;
+			lastAttackPositionEnd = bladeEnd.position;
 		}
 		else
 		{
@@ -36,9 +53,9 @@ public class MeleeAttack : MonoBehaviour
 
 		if (meleeAttackDuration.IsIncluded(meleeAttackTimer))
 		{
-			var bladeTip = attackShape.position + attackShape.right * bladeLength;
-			var hits = Physics2D.RaycastAll(attackShape.position, attackShape.right, bladeLength);
-			Debug.DrawRay(attackShape.position, attackShape.right * bladeLength, Color.red);
+			var toBladeTop = bladeEnd.position - bladeStart.position;
+			var hits = Physics2D.RaycastAll(bladeStart.position, toBladeTop, toBladeTop.magnitude);
+			Debug.DrawRay(bladeStart.position, toBladeTop, Color.red);
 			foreach (var hit in hits)
 			{
 				if (hit.collider.tag == "Enemy" && attackedEnemy != hit.collider.gameObject)
@@ -48,24 +65,66 @@ public class MeleeAttack : MonoBehaviour
 				}
 			}
 
-			var toLastPos = lastAttackPosition - bladeTip;
-			hits = Physics2D.RaycastAll(bladeTip, toLastPos, toLastPos.magnitude);
-			Debug.DrawRay(bladeTip, toLastPos, Color.red);
-			foreach (var hit in hits)
-			{
-				if (hit.collider.tag == "Enemy" && attackedEnemy != hit.collider.gameObject)
-				{
-					hit.collider.GetComponent<Enemy>().Hit(-hit.normal, 2);
-					attackedEnemy = hit.collider.gameObject;
-				}
-			}
-
-			lastAttackPosition = bladeTip;
+			ExtraHitTest();
 		}
 
 		if (meleeAttackTimer <= 0)
 		{
 			attackedEnemy = null;
 		}
+	}
+
+	private void ExtraHitTest()
+	{
+		var toLastPos = lastAttackPositionEnd - bladeEnd.position;
+		var hits = Physics2D.RaycastAll(bladeEnd.position, toLastPos, toLastPos.magnitude);
+		Debug.DrawRay(bladeEnd.position, toLastPos, Color.red);
+		foreach (var hit in hits)
+		{
+			if (hit.collider.tag == "Enemy" && attackedEnemy != hit.collider.gameObject)
+			{
+				hit.collider.GetComponent<Enemy>().Hit(-hit.normal, 2);
+				attackedEnemy = hit.collider.gameObject;
+			}
+		}
+
+		toLastPos = lastAttackPositionStart - bladeStart.position;
+		hits = Physics2D.RaycastAll(bladeStart.position, toLastPos, toLastPos.magnitude);
+		Debug.DrawRay(bladeStart.position, toLastPos, Color.red);
+		foreach (var hit in hits)
+		{
+			if (hit.collider.tag == "Enemy" && attackedEnemy != hit.collider.gameObject)
+			{
+				hit.collider.GetComponent<Enemy>().Hit(-hit.normal, 2);
+				attackedEnemy = hit.collider.gameObject;
+			}
+		}
+
+		toLastPos = lastAttackPositionStart - bladeEnd.position;
+		hits = Physics2D.RaycastAll(bladeEnd.position, toLastPos, toLastPos.magnitude);
+		Debug.DrawRay(bladeEnd.position, toLastPos, Color.red);
+		foreach (var hit in hits)
+		{
+			if (hit.collider.tag == "Enemy" && attackedEnemy != hit.collider.gameObject)
+			{
+				hit.collider.GetComponent<Enemy>().Hit(-hit.normal, 2);
+				attackedEnemy = hit.collider.gameObject;
+			}
+		}
+
+		toLastPos = lastAttackPositionEnd - bladeStart.position;
+		hits = Physics2D.RaycastAll(bladeStart.position, toLastPos, toLastPos.magnitude);
+		Debug.DrawRay(bladeStart.position, toLastPos, Color.red);
+		foreach (var hit in hits)
+		{
+			if (hit.collider.tag == "Enemy" && attackedEnemy != hit.collider.gameObject)
+			{
+				hit.collider.GetComponent<Enemy>().Hit(-hit.normal, 2);
+				attackedEnemy = hit.collider.gameObject;
+			}
+		}
+
+		lastAttackPositionStart = bladeStart.position;
+		lastAttackPositionEnd = bladeEnd.position;
 	}
 }

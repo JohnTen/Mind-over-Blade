@@ -30,7 +30,7 @@ public class Sheath : MonoBehaviour
 			var knife = Instantiate(knifePrefab.gameObject).GetComponent<Knife>();
 			knife.transform.parent = sheathPositions[i];
 			knife.transform.position = sheathPositions[i].position;
-			knife.transform.rotation = transform.rotation;
+			knife.transform.rotation = sheathPositions[i].rotation;
 			knife.SetSheath(this);
 			knifesInSheath.Enqueue(knife);
 			allKnifes.Add(knife);
@@ -42,18 +42,10 @@ public class Sheath : MonoBehaviour
 		if (right && this.transform.eulerAngles.y != 0)
 		{
 			this.transform.rotation = Quaternion.Euler(0, 0, 0);
-			foreach (var item in knifesInSheath)
-			{
-				item.transform.rotation = this.transform.rotation;
-			}
 		}
 		else if(!right && this.transform.eulerAngles.y == 0)
 		{
 			this.transform.rotation = Quaternion.Euler(0, 180, 0);
-			foreach (var item in knifesInSheath)
-			{
-				item.transform.rotation = this.transform.rotation;
-			}
 		}
 	}
 
@@ -71,7 +63,7 @@ public class Sheath : MonoBehaviour
 	{
 		knife.transform.parent = sheathPositions[knifesInSheath.Count];
 		knife.transform.position = sheathPositions[knifesInSheath.Count].position;
-		knife.transform.rotation = transform.rotation;
+		knife.transform.rotation = sheathPositions[knifesInSheath.Count].rotation;
 		knifesInSheath.Enqueue(knife);
 		if (OnRecievedKnife != null)
 			OnRecievedKnife.Invoke(knife);
@@ -92,6 +84,7 @@ public class Sheath : MonoBehaviour
 			{
 				item.transform.parent = sheathPositions[index];
 				item.transform.position = Vector3.Lerp(sheathPositions[index + 1].position, sheathPositions[index].position, timer);
+				item.transform.rotation = Quaternion.Lerp(sheathPositions[index + 1].rotation, sheathPositions[index].rotation, timer);
 				index++;
 				if (index >= 2) break;
 			}

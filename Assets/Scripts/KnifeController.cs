@@ -7,33 +7,89 @@ public class KnifeController : MonoBehaviour
 	[SerializeField] float fireRate;
 	[SerializeField] float allLaunchTime;
 	[SerializeField] float allLaunchRange;
-	[SerializeField] float withDrawHeldTime;
-	[SerializeField] float pauseTimeDuration;
-	[SerializeField] float hoverHeldTime;
+	[SerializeField] float allLaunchRate;
 	[SerializeField] float pullingForce;
-	[SerializeField] float pullingForceLimit;
 	[SerializeField] float autoPickupDistance;
 	[SerializeField] float autoReturnDistance;
-	[SerializeField] float dispersion;
-	[SerializeField] SpriteRenderer allLaunchIndicator;
 	[Space(30)]
 	[SerializeField] float allLaunchTimer;
-	[SerializeField] float withDrawHeldTimer;
-	[SerializeField] float hoverHeldTimer;
-	[SerializeField] bool changedDirection;
-	[SerializeField] float pausedTime;
 	[SerializeField] Sheath sheath;
 	[SerializeField] PlayerMover player;
-	[SerializeField] LinkedList<Knife> knifesInAirList;
-	
+	[SerializeField] List<Knife> knifesInAirList;
 
+	PlayerInput input;
 	Vector3 pointerDownPosition;
 
 	private void Awake()
 	{
-		knifesInAirList = new LinkedList<Knife>();
+		knifesInAirList = new List<Knife>();
 		sheath.OnRecievedKnife += Sheath_OnRecievedKnife;
 		player.OnChangeDirection += Player_OnChangeDirection;
+
+		input = GetComponent<PlayerInput>();
+		input.OnRangePressed += Input_OnRangePressed;
+		input.OnChargedRangePressed += Input_OnChargedRangePressed;
+		input.OnWithdrawAirPressed += Input_OnWithdrawAirPressed;
+		input.OnWithdrawStuckPressed += Input_OnWithdrawStuckPressed;
+	}
+
+	private void Input_OnWithdrawStuckPressed()
+	{
+		if (player.Frozen) return;
+
+		var minDistance = float.PositiveInfinity;
+		var knifeIndex = -1;
+		for (int i = 0; i < knifesInAirList.Count; i++)
+		{
+			var distance = (knifesInAirList[i].transform.position - sheath.transform.position).sqrMagnitude;
+			if (distance > minDistance
+			|| !knifesInAirList[i].StuckedOnClimbable
+			|| knifesInAirList[i].IsReturning)
+				continue;
+
+			minDistance = distance;
+			knifeIndex = i;
+		}
+
+		if (knifeIndex >= 0)
+		{
+			player.Pull((knifesInAirList[knifeIndex].transform.position - transform.position).normalized * pullingForce);
+			knifesInAirList[knifeIndex].Withdraw();
+		}
+	}
+
+	private void Input_OnWithdrawAirPressed()
+	{
+		if (player.Frozen) return;
+		
+		for (int i = 0; i < knifesInAirList.Count; i++)
+		{
+			if (knifesInAirList[i].StuckedOnClimbable
+			|| knifesInAirList[i].IsReturning)
+				continue;
+			
+			knifesInAirList[i].Withdraw();
+		}
+	}
+
+	private void Input_OnRangePressed()
+	{
+		if (player.Frozen) return;
+
+		var knife = sheath.TakeKnife(false);
+
+		if (knife != null)
+		{
+			knifesInAirList.Add(knife);
+			knife.Launch(input.GetAimingDirection(), true);
+		}
+	}
+
+	private void Input_OnChargedRangePressed()
+	{
+		if (player.Frozen) return;
+
+		StartCoroutine(LaunchAllKnife(input.GetAimingDirection()));
 	}
 
 	private void Sheath_OnRecievedKnife(Knife knife)
@@ -50,184 +106,6 @@ public class KnifeController : MonoBehaviour
 	{
 		sheath.ReloadSpeed = fireRate;
 
-		if (Input.GetMouseButton(0))
-		{
-			var position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-			position.z = 0;
-
-			allLaunchTimer += Time.deltaTime;
-			if (Input.GetMouseButtonDown(0))
-			{
-				pointerDownPosition = position;
-			}
-			
-			if (allLaunchTimer > allLaunchTime)
-			{
-				if (!allLaunchIndicator.enabled)
-				{
-					allLaunchIndicator.enabled = true;
-					allLaunchIndicator.transform.position = position;
-					allLaunchIndicator.transform.localScale = Vector3.one * allLaunchRange;
-				}
-
-				pausedTime += Time.deltaTime;
-
-				if (pausedTime < pauseTimeDuration)
-				{
-					Time.timeScale = 0.2f;
-				}
-				else
-				{
-					Time.timeScale = 1f;
-				}
-			}
-		}
-		else
-		{
-			if (Input.GetMouseButtonUp(0))
-			{
-				var position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-				position.z = 0;
-				var toPosition = position - pointerDownPosition;
-
-				if (allLaunchTimer < allLaunchTime)
-				{
-					var knife = sheath.TakeKnife(false);
-
-					if (knife != null)
-					{
-						knifesInAirList.AddLast(knife);
-						knife.Launch(position - sheath.LaunchPosition.position);
-					}
-				}
-				else
-				{
-					if (toPosition.sqrMagnitude > allLaunchRange * allLaunchRange)
-					{
-						foreach (var knife in knifesInAirList)
-						{
-							if (knife.State != KnifeState.InSheath)
-							{
-								knife.ChangeDirection(toPosition);
-							}
-						}
-					}
-					else
-					{
-						var directions = GenerateDirections(position - sheath.LaunchPosition.position, sheath.knifeCount);
-						print(directions.Length);
-						for (int i = 0; i < directions.Length; i++)
-						{
-							var knife = sheath.TakeKnife(true);
-							knifesInAirList.AddLast(knife);
-							knife.Launch(directions[i], true);
-						}
-					}
-				}
-
-				Time.timeScale = 1f;
-				allLaunchIndicator.enabled = false;
-				allLaunchTimer = 0;
-			}
-		}
-
-		
-		if (Input.GetMouseButton(1) && knifesInAirList.Count > 0)
-		{
-			withDrawHeldTimer += Time.deltaTime;
-			if (withDrawHeldTimer > withDrawHeldTime)
-			{
-				foreach (var knife in knifesInAirList)
-				{
-					knife.Withdraw();
-					if (knife.StuckedOnClimbable)
-					{
-						GetComponent<Rigidbody2D>().AddForce((knife.transform.position - transform.position).normalized * pullingForce, ForceMode2D.Impulse);
-					}
-				}
-				withDrawHeldTimer = 0;
-			}
-		}
-		else
-		{
-			if (Input.GetMouseButtonUp(1) && knifesInAirList.Count > 0)
-			{
-				var knife = knifesInAirList.First.Value;
-					
-				knife.Withdraw();
-				if (knife.StuckedOnClimbable)
-				{
-					GetComponent<Rigidbody2D>().AddForce((knife.transform.position - transform.position).normalized * pullingForce, ForceMode2D.Impulse);
-				}
-			}
-
-			withDrawHeldTimer = 0;
-		}
-
-		if (Input.GetKey(KeyCode.Q))
-		{
-			hoverHeldTimer += Time.deltaTime;
-			if (hoverHeldTimer > hoverHeldTime)
-			{
-				pausedTime += Time.unscaledDeltaTime;
-
-				if (pausedTime < pauseTimeDuration)
-				{
-					Time.timeScale = 0.2f;
-					if (Input.GetMouseButtonDown(0))
-					{
-						changedDirection = true;
-						pointerDownPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-						pointerDownPosition.z = 0;
-					}
-				}
-				else
-				{
-					Time.timeScale = 1f;
-
-				}
-
-				if (Input.GetMouseButtonUp(0) && changedDirection)
-				{
-					var pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-					pos.z = 0;
-					pos -= pointerDownPosition;
-
-					foreach (var knife in knifesInAirList)
-					{
-						print(pos);
-						if (knife.State != KnifeState.InSheath)
-						{
-							knife.ChangeDirection(pos);
-						}
-					}
-				}
-			}
-		}
-		else
-		{
-			if (hoverHeldTimer > hoverHeldTime)
-			{
-				Time.timeScale = 1f;
-			}
-
-			if (!changedDirection && Input.GetKeyUp(KeyCode.Q))
-			{
-				foreach (var knife in knifesInAirList)
-				{
-					if (!knife.Hovered)
-					{
-						knife.Hover();
-						break;
-					}
-				}
-			}
-
-			pausedTime = 0;
-			hoverHeldTimer = 0;
-			changedDirection = false;
-		}
-
 		foreach (var knife in knifesInAirList)
 		{
 			var dir = knife.transform.position - sheath.transform.position;
@@ -236,7 +114,7 @@ public class KnifeController : MonoBehaviour
 				knife.Withdraw();
 			}
 
-			if (knife.State == KnifeState.Stuck && dir.sqrMagnitude < autoPickupDistance * autoPickupDistance)
+			if (knife.State == KnifeState.Stuck && !knife.StuckedOnClimbable && dir.sqrMagnitude < autoPickupDistance * autoPickupDistance)
 			{
 				//knife.transform.position = sheath.transform.position;
 				knife.Withdraw();
@@ -244,18 +122,30 @@ public class KnifeController : MonoBehaviour
 		}
 	}
 
-	Vector3[] GenerateDirections(Vector3 baseDirection, int numberOfDirection)
+	IEnumerator LaunchAllKnife(Vector3 direction)
 	{
-		if (numberOfDirection <= 0) return new Vector3[0];
-		Vector3[] directions = new Vector3[numberOfDirection];
+		var time = 0f;
 
-		float angle = (numberOfDirection - 1) * dispersion * 0.5f;
-		for (int i = 0; i < numberOfDirection; i++)
+		player.Frozen = true;
+		while (sheath.knifeCount > 0)
 		{
-			directions[i] = Quaternion.Euler(0, 0, angle) * baseDirection;
-			angle -= dispersion;
-		}
+			time += Time.deltaTime * allLaunchRate;
+			if (time < 1)
+			{
+				yield return null;
+				continue;
+			}
+			time--;
 
-		return directions;
+			var knife = sheath.TakeKnife(true);
+			knifesInAirList.Add(knife);
+			knife.Launch(direction, true);
+		}
+		player.Frozen = false;
+	}
+
+	public void SetInputModel(IInputModel model)
+	{
+		throw new System.NotImplementedException();
 	}
 }

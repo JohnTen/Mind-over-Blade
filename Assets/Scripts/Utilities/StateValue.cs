@@ -9,29 +9,53 @@ namespace UnityUtility
 	public struct StateValue
 	{
 		[SerializeField]
-		private float baseValue;
-		public float BaseValue
+		private float @base;
+		public float Base
 		{
-			get { return baseValue; }
-			set { baseValue = value; }
+			get { return @base; }
+			set { @base = value; }
 		}
 
 		[SerializeField]
-		private float currentValue;
-		public float CurrentValue
+		private float current;
+		public float Current
 		{
-			get { return currentValue; }
-			set { currentValue = value; }
+			get { return current; }
+			set { current = value; }
 		}
 
 		public void ResetCurrentValue()
 		{
-			CurrentValue = BaseValue;
+			Current = Base;
 		}
 
-		public float ModCurrent(float value)
+		public static implicit operator float(StateValue value)
 		{
-			return CurrentValue += value;
+			return value.current;
+		}
+		
+		public static StateValue operator +(StateValue v1, float v2)
+		{
+			v1.current += v2;
+			return v1;
+		}
+
+		public static StateValue operator -(StateValue v1, float v2)
+		{
+			v1.current -= v2;
+			return v1;
+		}
+
+		public static StateValue operator *(StateValue v1, float v2)
+		{
+			v1.current *= v2;
+			return v1;
+		}
+
+		public static StateValue operator /(StateValue v1, float v2)
+		{
+			v1.current /= v2;
+			return v1;
 		}
 	}
 }

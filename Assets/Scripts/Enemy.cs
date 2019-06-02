@@ -5,7 +5,7 @@ using UnityUtility;
 using UnityUtility.Platformer;
 
 [RequireComponent(typeof(PhysicalJumper))]
-public class Enemy : PhysicalMover
+public class Enemy : PhysicalMover, IAttackable
 {
 	[SerializeField] int hitPoint;
 	[SerializeField] float hitBackForce;
@@ -18,11 +18,16 @@ public class Enemy : PhysicalMover
 	[SerializeField] float stateChangeTimer;
 	[SerializeField] bool stuned;
 
+	public event Action<AttackPackage> OnHit;
+
 	public bool Stuned => stuned;
 	public int State => state;
 
+	Dictionary<int, AttackPackage> attacks = new Dictionary<int, AttackPackage>();
+
 	public void Hit(Vector3 hitDirection, float force)
 	{
+		return;
 		if (stuned) return;
 
 		hitPoint--;
@@ -30,7 +35,7 @@ public class Enemy : PhysicalMover
 			Destroy(gameObject);
 
 		hitDirection.x = hitDirection.x > 0 ? 1 : -1;
-		hitDirection.y = 1;
+		hitDirection.y = 0.5f;
 		hitDirection.z = 0;
 
 		stuned = true;
@@ -117,5 +122,33 @@ public class Enemy : PhysicalMover
 		}
 
 		stuned = false;
+	}
+
+	public AttackResult ReceiveAttack(ref AttackPackage attack)
+	{
+		if (attacks.ContainsKey(attack._hashID)) return AttackResult.Failed;
+
+		attacks.Add(attack._hashID, attack);
+		DelayedRemoveAttackPackage(attack._hashID);
+
+		hitPoint--;
+		if (hitPoint <= 0)
+			Destroy(gameObject);
+
+		var hitDirection = attack._fromDirection;
+		hitDirection.x = attack._fromDirection.x > 0 ? 1 : -1;
+		hitDirection.y = 0.5f;
+
+		stuned = true;
+		StartCoroutine(BeenHit());
+		rigidBody.AddForce(hitDirection * hitBackForce * attack._hitBackDistance, ForceMode2D.Impulse);
+
+		return AttackResult.Success;
+	}
+
+	IEnumerator DelayedRemoveAttackPackage(int hashID)
+	{
+		yield return new WaitForSeconds(0.2f);
+		attacks.Remove(hashID);
 	}
 }

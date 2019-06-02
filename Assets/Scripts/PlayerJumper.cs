@@ -11,16 +11,24 @@ public class PlayerJumper : PhysicalJumper
 	[SerializeField] Vector2 direction;
 	public event Action<Vector3> OnDashingBegin;
 	public event Action OnDashingEnd;
+	public event Action<float> OnJump;
 	public bool dashing;
 
+	PlayerInput input;
 	Vector2 MoveCommond;
+
+	protected override void Awake()
+	{
+		base.Awake();
+		input = GetComponent<PlayerInput>();
+	}
 
 	protected override bool GetJumpingCommand()
 	{
-		if (!base.GetJumpingCommand())
+		if (!input.IsJumpPressed())
 			return false;
 
-		MoveCommond = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+		MoveCommond = input.GetMovingDirection();
 		return true;
 	}
 
@@ -30,20 +38,8 @@ public class PlayerJumper : PhysicalJumper
 		direction = MoveCommond;
 		if (groundDetector.OnGround)
 		{
-			if (Mathf.Abs(MoveCommond.x) <= 0.1f || MoveCommond.y > 0.1f)
-			{
-				base.Jumping();
-			}
-			else
-			{
-				StartCoroutine(Dashing());
-			}
-		}
-		else
-		{
-			if (MoveCommond == Vector2.zero)
-				MoveCommond = GetComponent<PlayerMover>().FacingRight? Vector2.right : Vector2.left;
-			StartCoroutine(Dashing());
+			base.Jumping();
+			OnJump?.Invoke(jumpHeight);
 		}
 	}
 

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityUtility;
 
 public enum KnifeState
 {
@@ -10,7 +11,7 @@ public enum KnifeState
 	Stuck,
 }
 
-public class Knife : MonoBehaviour
+public class Knife : BaseWeapon
 {
 	[SerializeField] Sheath sheath;
 	[SerializeField] float bladeLength;
@@ -33,6 +34,9 @@ public class Knife : MonoBehaviour
 	[SerializeField] Enemy hittedEnemy;
 	[SerializeField] bool piercing;
 
+	bool activated;
+	AttackPackage basicAttack;
+
 	public KnifeState State
 	{
 		get { return state; }
@@ -44,6 +48,8 @@ public class Knife : MonoBehaviour
 	public bool Hovered => hovered;
 
 	public bool StuckedOnClimbable { get; private set; }
+
+	public bool IsReturning => returning;
 
 	private void Update()
 	{
@@ -61,11 +67,6 @@ public class Knife : MonoBehaviour
 		if (state == KnifeState.Hover)
 		{
 			Hovering();
-		}
-
-		if (state == KnifeState.Stuck)
-		{
-			Stuck();
 		}
 	}
 
@@ -85,21 +86,7 @@ public class Knife : MonoBehaviour
 		transform.position = sheath.LaunchPosition.position;
 		transform.right = direction;
 
-		return true;
-	}
-
-	public bool ChangeDirection(Vector3 direction)
-	{
-		if (changedDirection || 
-			(state != KnifeState.Flying &&
-			state != KnifeState.Hover))
-			return false;
-		
-		changedDirection = true;
-		actionTimer = actionDelay;
-		state = KnifeState.Flying;
-
-		transform.right = direction;
+		basicAttack = AttackPackage.CreateNewPackage();
 
 		return true;
 	}
@@ -115,6 +102,9 @@ public class Knife : MonoBehaviour
 		hovered = true;
 		actionTimer = actionDelay;
 		state = KnifeState.Hover;
+		
+		basicAttack = AttackPackage.CreateNewPackage();
+
 		return true;
 	}
 
@@ -136,6 +126,7 @@ public class Knife : MonoBehaviour
 			hittedEnemy.AddForce(dir * dragForce);
 		}
 
+		basicAttack = AttackPackage.CreateNewPackage();
 		hittedEnemy = null;
 		Returning();
 
@@ -147,36 +138,27 @@ public class Knife : MonoBehaviour
 		RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.right, speed * Time.deltaTime);
 		if (hit.collider != null)
 		{
+			var attackable = hit.collider.GetComponent<IAttackable>();
 			transform.position = (Vector3)hit.point + transform.right * sinkingLength;
 			if (hit.collider.tag == "Climable")
 			{
 				StuckedOnClimbable = true;
 				state = KnifeState.Stuck;
 			}
-			else if (hit.collider.tag == "Enemy")
+			else if (attackable != null)
 			{
 				print("Enemy fly");
-				hittedEnemy = hit.collider.GetComponent<Enemy>();
-				hittedEnemy.Hit(-hit.normal, 1);
-				if (!piercing)
-				{
-					state = KnifeState.Stuck;
-					transform.parent = hittedEnemy.transform;
-				}
-				else
-				{
-					hittedEnemy = null;
-				}
+				var attack = Process(basicAttack);
+				attack._fromDirection = hit.collider.transform.position - transform.position;
+				RaiseOnHitEvent(attackable, attackable.ReceiveAttack(ref attack), attack);
 			}
 			else
-				state = KnifeState.Stuck;
+				Hover();
 
 		}
-		else
-		{
-			transform.position += transform.right * speed * Time.deltaTime;
-			traveledDistance += speed * Time.deltaTime;
-		}
+
+		transform.position += transform.right * speed * Time.deltaTime;
+		traveledDistance += speed * Time.deltaTime;
 
 		if (traveledDistance >= hoveringDistance)
 			Hover();
@@ -207,11 +189,14 @@ public class Knife : MonoBehaviour
 		RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.right, speed * Time.deltaTime);
 		if (hit.collider != null)
 		{
-			if (hit.collider.tag == "Enemy")
+			var attackable = hit.collider.GetComponent<IAttackable>();
+
+			if (attackable != null)
 			{
 				print("Enemy return");
-				var enemy = hit.collider.GetComponent<Enemy>();
-				enemy.Hit(-hit.normal, 1);
+				var attack = Process(basicAttack);
+				attack._fromDirection = hit.collider.transform.position - transform.position;
+				RaiseOnHitEvent(attackable, attackable.ReceiveAttack(ref attack), attack);
 			}
 		}
 
@@ -230,17 +215,37 @@ public class Knife : MonoBehaviour
 		RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.right, bladeLength);
 		if (hit.collider != null)
 		{
-			if (hit.collider.tag == "Enemy")
+			var attackable = hit.collider.GetComponent<IAttackable>();
+
+			if (attackable != null)
 			{
 				print("Enemy hover");
-				var enemy = hit.collider.GetComponent<Enemy>();
-				enemy.Hit(-hit.normal, 0.5f);
+				var attack = Process(basicAttack);
+				attack._fromDirection = hit.collider.transform.position - transform.position;
+				RaiseOnHitEvent(attackable, attackable.ReceiveAttack(ref attack), attack);
 			}
 		}
 	}
-	
-	private void Stuck()
+
+	public override void Activate(AttackPackage attack)
 	{
-		
+		basicAttack = attack;
+		activated = true;
+	}
+
+	public override void Deactivate()
+	{
+		activated = false;
+	}
+
+	public override AttackPackage Process(AttackPackage target)
+	{
+		target._isMeleeAttack = false;
+		target._isChargedAttack = false;
+		target._hitPointDamage += 1;
+		target._enduranceDamage += 1;
+		target._hitBackDistance += 0.7f;
+
+		return target;
 	}
 }
