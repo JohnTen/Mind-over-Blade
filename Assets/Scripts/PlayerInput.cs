@@ -9,8 +9,9 @@ public class PlayerInput : MonoBehaviour, IInputModelPlugable
 	[SerializeField] float withdrawTime;
 	[SerializeField] Sheath sheath;
 	[SerializeField] LineRenderer aimingLine;
+    [SerializeField] Transform aimingLineBase;
 
-	bool throwPressedBefore;
+    bool throwPressedBefore;
 	bool withdrawPressedBefore;
 	bool usingController;
 	IInputModel input;
@@ -44,7 +45,7 @@ public class PlayerInput : MonoBehaviour, IInputModelPlugable
 		}
 		else
 		{
-			aim = (Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position);
+			aim = (Camera.main.ScreenToWorldPoint(Input.mousePosition) - aimingLineBase.position);
 			if (aim.SqrMagnitude() > 1)
 				aim.Normalize();
 		}
@@ -144,35 +145,35 @@ public class PlayerInput : MonoBehaviour, IInputModelPlugable
 			OnJumpPressed?.Invoke();
 		}
 
-		//if (input.GetButtonDown("WithdrawOnAir"))
-		//{
-		//	OnWithdrawAirPressed?.Invoke();
-		//}
+        //if (input.GetButtonDown("WithdrawOnAir"))
+        //      {
+        //          OnWithdrawAirPressed?.Invoke();
+        //      }
 
-		//if (input.GetButtonDown("WithdrawOnStuck"))
-		//{
-		//	OnWithdrawStuckPressed?.Invoke();
-		//}
+        //      if (input.GetButtonDown("WithdrawOnStuck"))
+        //      {
+        //          OnWithdrawStuckPressed?.Invoke();
+        //      }
 
-		if (input.GetButton("WithdrawOnAir") || input.GetButton("WithdrawOnStuck"))
-		{
-			withdrawPressedBefore = true;
-			withdrawTimer += Time.deltaTime;
-			if (withdrawTimer >= withdrawTime)
-			{
-				OnWithdrawAirPressed?.Invoke();
-			}
-		}
-		else if (withdrawPressedBefore)
-		{
-			withdrawPressedBefore = false;
-			if (withdrawTimer < withdrawTime)
-			{
-				OnWithdrawStuckPressed?.Invoke();
-			}
-			withdrawTimer = 0;
-		}
-	}
+        if (input.GetButton("WithdrawOnAir") || input.GetButton("WithdrawOnStuck"))
+        {
+            withdrawPressedBefore = true;
+            withdrawTimer += Time.deltaTime;
+            if (withdrawTimer >= withdrawTime)
+            {
+                OnWithdrawAirPressed?.Invoke();
+            }
+        }
+        else if (withdrawPressedBefore)
+        {
+            withdrawPressedBefore = false;
+            if (withdrawTimer < withdrawTime)
+            {
+                OnWithdrawStuckPressed?.Invoke();
+            }
+            withdrawTimer = 0;
+        }
+    }
 
 	public void SetInputModel(IInputModel model)
 	{

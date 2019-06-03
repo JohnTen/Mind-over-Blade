@@ -45,13 +45,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bddfbc2febfc06149b527bfce5a34c7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _baseHitPointDamage: 0
+  _baseEnduranceDamage: 0
   sheath: {fileID: 0}
   bladeLength: 1.6
-  speed: 70
+  speed: 100
   actionDelay: 0.1
-  backDistance: 0.5
+  backDistance: 0.8
   sinkingLength: -0.2
-  hoveringDistance: 30
+  hoveringDistance: 35
   hoveringRotateSpeed: -720
   hoveringDuration: 5
   dragForce: 3
@@ -202,7 +204,7 @@ Transform:
   m_GameObject: {fileID: 3672448917957651048}
   m_LocalRotation: {x: 0, y: 0, z: 1, w: 0}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3.5, y: 4, z: 1}
+  m_LocalScale: {x: 2.5, y: 2, z: 1}
   m_Children:
   - {fileID: 7732800193228834177}
   - {fileID: 5123091193175797506}

@@ -43,8 +43,7 @@ public class KnifeController : MonoBehaviour
 		{
 			var distance = (knifesInAirList[i].transform.position - sheath.transform.position).sqrMagnitude;
 			if (distance > minDistance
-			|| !knifesInAirList[i].StuckedOnClimbable
-			|| knifesInAirList[i].IsReturning)
+            || knifesInAirList[i].State == KnifeState.Flying)
 				continue;
 
 			minDistance = distance;
@@ -53,7 +52,8 @@ public class KnifeController : MonoBehaviour
 
 		if (knifeIndex >= 0)
 		{
-			player.Pull((knifesInAirList[knifeIndex].transform.position - transform.position).normalized * pullingForce);
+            if (knifesInAirList[knifeIndex].StuckedOnClimbable)
+			    player.Pull((knifesInAirList[knifeIndex].transform.position - transform.position).normalized * pullingForce);
 			knifesInAirList[knifeIndex].Withdraw();
 		}
 	}
@@ -64,11 +64,12 @@ public class KnifeController : MonoBehaviour
 		
 		for (int i = 0; i < knifesInAirList.Count; i++)
 		{
-			if (knifesInAirList[i].StuckedOnClimbable
-			|| knifesInAirList[i].IsReturning)
+			if (knifesInAirList[i].State == KnifeState.Flying)
 				continue;
 			
-			knifesInAirList[i].Withdraw();
+            if (knifesInAirList[i].StuckedOnClimbable)
+                player.Pull((knifesInAirList[i].transform.position - transform.position).normalized * pullingForce);
+            knifesInAirList[i].Withdraw();
 		}
 	}
 
