@@ -52,7 +52,7 @@ MonoBehaviour:
   speed: 100
   actionDelay: 0.1
   backDistance: 0.8
-  sinkingLength: -0.2
+  sinkingLength: 0
   hoveringDistance: 35
   hoveringRotateSpeed: -720
   hoveringDuration: 5

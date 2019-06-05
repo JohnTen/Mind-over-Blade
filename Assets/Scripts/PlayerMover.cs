@@ -24,6 +24,7 @@ public class PlayerMover : PhysicalMover
 	Vector2 velocity = Vector2.zero;
 
 	PlayerInput input;
+	PlayerAnimation _animation;
 	float airborneTime;
 	List<ContactPoint2D> contacts;
 
@@ -43,17 +44,27 @@ public class PlayerMover : PhysicalMover
 
 		input = GetComponent<PlayerInput>();
 		contacts = new List<ContactPoint2D>();
+
+		_animation = GetComponent<PlayerAnimation>();
+		_animation.OnFrozenMovement += _animation_OnFrozenMovement;
+	}
+
+	private void _animation_OnFrozenMovement(bool t1)
+	{
+		Frozen = t1;
 	}
 
 	private void GroundDetector_OnLanding()
 	{
 		airborneTime = 0;
+		_animation.Landing = true;
 	}
 
 	public void Pull(Vector3 force)
 	{
 		velocity = force;
 		airborneTime = 0;
+		_animation.Jump = true;
 	}
 
 	public void SetStepSpeed(float speed)
@@ -68,7 +79,10 @@ public class PlayerMover : PhysicalMover
 
 	private void Jumper_OnJump(float height)
 	{
+		if (Frozen) return;
+
 		velocity.y = Mathf.Sqrt(19.62f * height * rigidBody.gravityScale);
+		_animation.Jump = true;
 	}
 
 	private void Jumper_OnDashingEnd()
@@ -137,6 +151,8 @@ public class PlayerMover : PhysicalMover
 		}
 
 		ResetPhysicalContacts();
+
+		_animation.SetSpeed(velocity.x, velocity.y);
 	}
 
 	private Vector2 ApplySpeedLimit(Vector2 velocity)
