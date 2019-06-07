@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityUtility;
 using UnityUtility.Platformer;
 
@@ -10,6 +11,7 @@ public class Enemy : PhysicalMover, IAttackable
 	[SerializeField] int hitPoint;
 	[SerializeField] float hitBackForce;
 	[SerializeField] float stunDuration;
+	[SerializeField] float detectionRange;
 	[SerializeField] Transform player;
 	[SerializeField] SpriteRenderer sprite;
 	[SerializeField, MinMaxSlider(0, 5)] Vector2 flashRed;
@@ -18,10 +20,15 @@ public class Enemy : PhysicalMover, IAttackable
 	[SerializeField] float stateChangeTimer;
 	[SerializeField] bool stuned;
 
+	Slider healthBar;
+
 	public event Action<AttackPackage> OnHit;
 
 	public bool Stuned => stuned;
 	public int State => state;
+	public Vector2 FirstTarget { get; set; }
+	public Vector2 LastTarget { get; set; }
+	public bool TowardsFirstTarget;
 
 	Dictionary<int, AttackPackage> attacks = new Dictionary<int, AttackPackage>();
 
@@ -43,14 +50,19 @@ public class Enemy : PhysicalMover, IAttackable
 		rigidBody.AddForce(hitDirection * hitBackForce * force, ForceMode2D.Impulse);
 	}
 
-	private void Update()
+	protected override void Awake()
 	{
-		stateChangeTimer -= Time.deltaTime;
-		if (stateChangeTimer <= 0)
-		{
-			state = RandomState();
-			stateChangeTimer = actionChange.RandomBetween();
-		}
+		healthBar = GetComponentInChildren<Slider>();
+		healthBar.maxValue = hitPoint;
+		healthBar.value = hitPoint;
+		player = FindObjectOfType<PlayerMover>().transform;
+		base.Awake();
+	}
+
+	private void OnDrawGizmos()
+	{
+		Gizmos.color = Color.red;
+		Gizmos.DrawWireCube(transform.position, new Vector3(detectionRange * 2, 1, 1));
 	}
 
 	public void AddForce(Vector2 force)
@@ -79,28 +91,33 @@ public class Enemy : PhysicalMover, IAttackable
 		if (stuned)
 			return Vector3.zero;
 
-		var dir = player.position - transform.position;
-		switch (state)
-		{
-			case 0:
-				dir.z = dir.y = 0;
-				dir.x = dir.x > 0 ? 1 : -1;
-				break;
-			case 1:
-				dir.z = dir.y = 0;
-				dir.x = dir.x > 0 ? -1 : 1;
-				break;
-			case 2:
-				dir = Vector3.zero;
-				break;
-		}
-
-		return dir;
+		if (DetectedPlayer())
+			return Chasing();
+		else
+			return Patrol();
+	}
+	
+	Vector2 Chasing()
+	{
+		var towardsPlayer = player.position - transform.position;
+		return towardsPlayer.normalized;
 	}
 
-	int RandomState()
+	Vector2 Patrol()
 	{
-		return Random.Range(0, 3);
+		var towardsTarget = TowardsFirstTarget ? FirstTarget - (Vector2)transform.position : LastTarget - (Vector2)transform.position;
+		if (towardsTarget.sqrMagnitude < 1)
+			TowardsFirstTarget = !TowardsFirstTarget;
+
+		return towardsTarget.normalized;
+	}
+
+	bool DetectedPlayer()
+	{
+		var towardsPlayer = player.position - transform.position;
+		Physics2D.queriesStartInColliders = false;
+		var hit = Physics2D.Raycast(transform.position, towardsPlayer, detectionRange);
+		return hit.transform == player;
 	}
 
 	IEnumerator BeenHit()
@@ -131,7 +148,8 @@ public class Enemy : PhysicalMover, IAttackable
 		attacks.Add(attack._hashID, attack);
 		DelayedRemoveAttackPackage(attack._hashID);
 
-		hitPoint--;
+		hitPoint -= (int)attack._hitPointDamage;
+		healthBar.value = hitPoint;
 		if (hitPoint <= 0)
 			Destroy(gameObject);
 

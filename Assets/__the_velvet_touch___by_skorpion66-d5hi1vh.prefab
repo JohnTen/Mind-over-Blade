@@ -45,8 +45,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bddfbc2febfc06149b527bfce5a34c7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _baseHitPointDamage: 0
-  _baseEnduranceDamage: 0
+  _baseHitPointDamage: 5
+  _baseEnduranceDamage: 5
   sheath: {fileID: 0}
   bladeLength: 1.6
   speed: 100
