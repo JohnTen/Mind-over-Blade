@@ -136,15 +136,22 @@ public class Knife : BaseWeapon
 	private void Flying()
 	{
 		RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.right, speed * Time.deltaTime);
+		transform.position += transform.right * speed * Time.deltaTime;
+		traveledDistance += speed * Time.deltaTime;
+
 		if (hit.collider != null)
 		{
+			print(hit.collider.name);
 			var attackable = hit.collider.GetComponent<IAttackable>();
-			transform.position = (Vector3)hit.point + transform.right * sinkingLength;
+
 			if (hit.collider.tag == "Climable")
 			{
 				StuckedOnClimbable = true;
 				state = KnifeState.Stuck;
+				transform.position = (Vector3)hit.point + transform.right * sinkingLength;
+				return;
 			}
+			else if (hit.collider.tag == "Player") { }
 			else if (attackable != null)
 			{
 				print("Enemy fly");
@@ -153,12 +160,12 @@ public class Knife : BaseWeapon
 				RaiseOnHitEvent(attackable, attackable.ReceiveAttack(ref attack), attack);
 			}
 			else
+			{
+				transform.position = hit.point;
 				Hover();
-
+				return;
+			}
 		}
-
-		transform.position += transform.right * speed * Time.deltaTime;
-		traveledDistance += speed * Time.deltaTime;
 
 		if (traveledDistance >= hoveringDistance)
 			Hover();
@@ -242,8 +249,8 @@ public class Knife : BaseWeapon
 	{
 		target._isMeleeAttack = false;
 		target._isChargedAttack = false;
-		target._hitPointDamage += 1;
-		target._enduranceDamage += 1;
+		target._hitPointDamage += _baseHitPointDamage;
+		target._enduranceDamage += _baseEnduranceDamage;
 		target._hitBackDistance += 0.7f;
 
 		return target;

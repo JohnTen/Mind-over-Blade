@@ -16,8 +16,10 @@ public class MeleeAttack : MonoBehaviour
 	[SerializeField] Vector3 lastAttackPositionEnd;
 	[SerializeField] GameObject attackedEnemy;
 	[SerializeField] PlayerMover player;
+	[SerializeField] PlayerAnimation animation;
 
 	PlayerInput input;
+	[SerializeField] bool repeatAttack;
 
 	private void Awake()
 	{
@@ -36,19 +38,24 @@ public class MeleeAttack : MonoBehaviour
 			{
 				player.Frozen = false;
 			}
+
+			if (input.IsMeleePressed())
+				repeatAttack = true;
 		}
 
-		if (input.IsMeleePressed() && meleeAttackTimer <= 0)
+		if ((input.IsMeleePressed() || repeatAttack) && meleeAttackTimer <= 0)
 		{
+			repeatAttack = false;
 			player.Frozen = true;
-			meleeAnimator.SetBool("Attack", true);
+			animation.Attack();
+			//meleeAnimator.SetBool("Attack", true);
 			meleeAttackTimer = 1;
 			lastAttackPositionStart = bladeStart.position;
 			lastAttackPositionEnd = bladeEnd.position;
 		}
 		else
 		{
-			meleeAnimator.SetBool("Attack", false);
+			//meleeAnimator.SetBool("Attack", false);
 		}
 
 		if (meleeAttackDuration.IsIncluded(meleeAttackTimer))
