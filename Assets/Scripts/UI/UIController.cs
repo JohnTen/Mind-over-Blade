@@ -24,6 +24,7 @@ public class UIController : MonoBehaviour
 
     private void Start()
     {
+        
         startButton.onClick.AddListener(OnStartButtonClick);
         exitButtion.onClick.AddListener(OnExitButtionClick);
     }
