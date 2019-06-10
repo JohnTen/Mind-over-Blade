@@ -4403,6 +4403,7 @@ MonoBehaviour:
   _enemyPrefab: {fileID: 7245046773056271536, guid: fa151b51bcca95c43926367cc0dc9bb1,
     type: 3}
   _range: 40
+  _spawnDelay: 2
 --- !u!1 &531399372
 GameObject:
   m_ObjectHideFlags: 0
@@ -6263,6 +6264,7 @@ MonoBehaviour:
   _enemyPrefab: {fileID: 7245046773056271536, guid: fa151b51bcca95c43926367cc0dc9bb1,
     type: 3}
   _range: 30
+  _spawnDelay: 2
 --- !u!1 &832179208
 GameObject:
   m_ObjectHideFlags: 0
@@ -7835,6 +7837,7 @@ MonoBehaviour:
   _enemyPrefab: {fileID: 7245046773056271536, guid: fa151b51bcca95c43926367cc0dc9bb1,
     type: 3}
   _range: 20
+  _spawnDelay: 2
 --- !u!1 &1081591213
 GameObject:
   m_ObjectHideFlags: 0
@@ -8348,6 +8351,7 @@ MonoBehaviour:
   _enemyPrefab: {fileID: 7245046773056271536, guid: fa151b51bcca95c43926367cc0dc9bb1,
     type: 3}
   _range: 30
+  _spawnDelay: 2
 --- !u!1 &1433989135
 GameObject:
   m_ObjectHideFlags: 0
@@ -8725,6 +8729,7 @@ MonoBehaviour:
   _enemyPrefab: {fileID: 7245046773056271536, guid: fa151b51bcca95c43926367cc0dc9bb1,
     type: 3}
   _range: 40
+  _spawnDelay: 2
 --- !u!1 &1506703478
 GameObject:
   m_ObjectHideFlags: 0
@@ -10354,6 +10359,7 @@ MonoBehaviour:
   _enemyPrefab: {fileID: 7245046773056271536, guid: fa151b51bcca95c43926367cc0dc9bb1,
     type: 3}
   _range: 25
+  _spawnDelay: 2
 --- !u!1 &1762392971
 GameObject:
   m_ObjectHideFlags: 0
@@ -11338,7 +11344,7 @@ GameObject:
   - component: {fileID: 1825722702}
   m_Layer: 10
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -13553,3 +13559,4 @@ MonoBehaviour:
   _enemyPrefab: {fileID: 7245046773056271536, guid: fa151b51bcca95c43926367cc0dc9bb1,
     type: 3}
   _range: 40
+  _spawnDelay: 2
