@@ -19,7 +19,10 @@ public class PlayerInput : MonoBehaviour, IInputModelPlugable
 	float allLaunchTimer;
 	float withdrawTimer;
 
-	public event Action OnMeleePressed;
+
+    public bool BlockInput { get; set; }
+
+    public event Action OnMeleePressed;
 	public event Action OnRangePressed;
 	public event Action OnChargedRangePressed;
 	public event Action OnJumpPressed;
@@ -28,17 +31,20 @@ public class PlayerInput : MonoBehaviour, IInputModelPlugable
 
 	public Vector2 GetMovingDirection()
 	{
-		return new Vector2(input.GetAxis("MoveX"), input.GetAxis("MoveY"));
+        if (BlockInput) return Vector2.zero;
+        return new Vector2(input.GetAxis("MoveX"), input.GetAxis("MoveY"));
 	}
 
 	internal bool IsJumpPressed()
 	{
+        if (BlockInput) return false;
 		return input.GetButtonDown("Jump");
 	}
 
 	public Vector2 GetAimingDirection()
 	{
-		var aim = Vector2.zero;
+        if (BlockInput) return Vector2.zero;
+        var aim = Vector2.zero;
 		if (usingController)
 		{
 			aim = new Vector2(input.GetAxis("LookX"), input.GetAxis("LookY"));
@@ -71,7 +77,8 @@ public class PlayerInput : MonoBehaviour, IInputModelPlugable
 
 	public bool IsMeleePressed()
 	{
-		return input.GetButtonDown("Melee");
+        if (BlockInput) return false;
+        return input.GetButtonDown("Melee");
 	}
 
 	private void Start()
@@ -82,7 +89,8 @@ public class PlayerInput : MonoBehaviour, IInputModelPlugable
 	// Update is called once per frame
 	void Update()
 	{
-		if (input.GetButtonDown("Melee"))
+        if (BlockInput) return;
+        if (input.GetButtonDown("Melee"))
 		{
 			OnMeleePressed?.Invoke();
 		}
