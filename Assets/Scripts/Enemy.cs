@@ -100,6 +100,7 @@ public class Enemy : PhysicalMover, IAttackable
 	Vector2 Chasing()
 	{
 		var towardsPlayer = player.position - transform.position;
+		towardsPlayer.y = 0;
 		return towardsPlayer.normalized;
 	}
 

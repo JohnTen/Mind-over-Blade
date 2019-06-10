@@ -6,13 +6,27 @@ public class EnemySpawn : MonoBehaviour
 {
 	[SerializeField] Enemy _enemyPrefab;
 	[SerializeField] float _range;
+	[SerializeField] float _spawnDelay = 2;
 	Enemy enemyReference;
+	float spawnTimer;
+	bool spawned;
 	
     void Update()
     {
-		if (enemyReference == null)
+		spawnTimer -= Time.deltaTime;
+
+		if (enemyReference == null && spawnTimer < 0)
 		{
-			Spawn();
+			if (spawned)
+			{
+				spawnTimer = _spawnDelay;
+				spawned = false;
+			}
+			else
+			{
+				Spawn();
+				spawned = true;
+			}
 		}
 	}
 
