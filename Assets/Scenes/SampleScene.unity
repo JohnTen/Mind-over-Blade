@@ -4674,8 +4674,23 @@ MonoBehaviour:
   startPanel: {fileID: 0}
   exitButtion: {fileID: 0}
   pausePanel: {fileID: 1496843079}
-  pauseResumeButton: {fileID: 1506375855}
   pauseExitButton: {fileID: 0}
+  onPause:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 364185315}
+        m_MethodName: set_BlockInput
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_TypeName: UnityUtility.BoolEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
 --- !u!1 &628795652
 GameObject:
   m_ObjectHideFlags: 0
@@ -6622,6 +6637,7 @@ MonoBehaviour:
   _enemyPrefab: {fileID: 7245046773056271536, guid: fa151b51bcca95c43926367cc0dc9bb1,
     type: 3}
   _range: 30
+  _spawnDelay: 2
 --- !u!4 &1066057682
 Transform:
   m_ObjectHideFlags: 0
@@ -8114,7 +8130,7 @@ MonoBehaviour:
     m_PressedColor: {r: 0.22609007, g: 0.16967781, b: 0.8773585, a: 1}
     m_SelectedColor: {r: 0.34109113, g: 0.6222528, b: 0.990566, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
-    m_ColorMultiplier: 3.28
+    m_ColorMultiplier: 1.43
     m_FadeDuration: 0.1
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
@@ -8133,7 +8149,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 621002204}
-        m_MethodName: OnResumeButtonClick
+        m_MethodName: UsePausePanel
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
