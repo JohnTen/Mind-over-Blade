@@ -38,7 +38,7 @@ public class UIController : MonoBehaviour
 
     private void OnStartButtonClick()
     {
-        SceneManager.LoadScene(0);
+        SceneManager.LoadScene(1);
     }
 
     private void OnExitButtionClick()
