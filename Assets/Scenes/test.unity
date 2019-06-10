@@ -2915,10 +2915,10 @@ MonoBehaviour:
   m_XDamping: 0.5
   m_YDamping: 0.3
   m_ZDamping: 0.3
-  m_ScreenX: 0.49076244
-  m_ScreenY: 0.77068526
+  m_ScreenX: 0.49538106
+  m_ScreenY: 0.79121906
   m_CameraDistance: 10
-  m_DeadZoneWidth: 0.20011552
+  m_DeadZoneWidth: 0.10080828
   m_DeadZoneHeight: 0.086242296
   m_DeadZoneDepth: 0
   m_UnlimitedSoftZone: 0
@@ -4351,7 +4351,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -137.81215, y: -131.60712, z: -10}
+  m_LocalPosition: {x: -138.20605, y: -130.62149, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -5688,7 +5688,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 710631603}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -137.81215, y: -131.60712, z: -10}
+  m_LocalPosition: {x: -138.20605, y: -130.62149, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 363776902}
@@ -11520,7 +11520,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 1.1943789}
+  m_Offset: {x: 0, y: 1.2544193}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -11531,7 +11531,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1.5, y: 5.8451977}
+  m_Size: {x: 1.5, y: 5.7251167}
   m_EdgeRadius: 0
 --- !u!50 &1825722710
 Rigidbody2D:
