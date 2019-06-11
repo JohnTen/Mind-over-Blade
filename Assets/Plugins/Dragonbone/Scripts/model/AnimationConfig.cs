@@ -343,23 +343,23 @@ namespace DragonBones
         }
 
         /// <private/>
-        public bool ContainsBoneMask(string boneName)
+        public bool ContainsBoneMask(string name)
         {
-            return boneMask.Count == 0 || boneMask.Contains(boneName);
+            return boneMask.Count == 0 || boneMask.Contains(name);
         }
 
         /// <private/>
-        public void AddBoneMask(Armature armature, string boneName, bool recursive = false)
+        public void AddBoneMask(Armature armature, string name, bool recursive = false)
         {
-            var currentBone = armature.GetBone(boneName);
+            var currentBone = armature.GetBone(name);
             if (currentBone == null)
             {
                 return;
             }
 
-            if (!boneMask.Contains(boneName)) // Add mixing
+            if (!boneMask.Contains(name)) // Add mixing
             {
-                boneMask.Add(boneName);
+                boneMask.Add(name);
             }
 
             if (recursive) // Add recursive mixing.

@@ -20,7 +20,7 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace DragonBones
@@ -71,7 +71,6 @@ namespace DragonBones
         /// <version>DragonBones 3.0</version>
         /// <language>zh_CN</language>
         public float timeScale = 1.0f;
-        private float _systemTime = 0.0f;
         private readonly List<IAnimatable> _animatebles = new List<IAnimatable>();
         private WorldClock _clock = null;
         /// <summary>
@@ -89,8 +88,14 @@ namespace DragonBones
         /// <language>zh_CN</language>
         public WorldClock(float time = -1.0f)
         {
-            this.time = time;
-            this._systemTime = DateTime.Now.Ticks * 0.01f * 0.001f;
+            if (time <= 0.0f)
+            {
+                this.time = DateTime.Now.Ticks / 100.0f / 1000.0f;
+            }
+            else
+            {
+                this.time = time;
+            }
         }
 
         /// <summary>
@@ -113,22 +118,14 @@ namespace DragonBones
                 passedTime = 0.0f;
             }
 
-            var currentTime = DateTime.Now.Ticks * 0.01f * 0.001f;
             if (passedTime < 0.0f)
             {
-                passedTime = currentTime - this._systemTime;
+                passedTime = DateTime.Now.Ticks / 100.0f / 1000.0f - this.time;
             }
-
-            this._systemTime = currentTime;
 
             if (this.timeScale != 1.0f)
             {
                 passedTime *= this.timeScale;
-            }
-
-            if (passedTime == 0.0f)
-            {
-                return;
             }
 
             if (passedTime < 0.0f)
@@ -140,35 +137,21 @@ namespace DragonBones
                 this.time += passedTime;
             }
 
-            int i = 0, r = 0, l = _animatebles.Count;
-            for (; i < l; ++i)
+            if (passedTime > 0.0f)
             {
-                var animateble = _animatebles[i];
-                if (animateble != null)
-                {
-                    if (r > 0)
-                    {
-                        _animatebles[i - r] = animateble;
-                        _animatebles[i] = null;
-                    }
-
-                    animateble.AdvanceTime(passedTime);
-                }
-                else
-                {
-                    r++;
-                }
-            }
-
-            if (r > 0)
-            {
-                l = _animatebles.Count;
+                int i = 0, r = 0, l = _animatebles.Count;
                 for (; i < l; ++i)
                 {
                     var animateble = _animatebles[i];
                     if (animateble != null)
                     {
-                        _animatebles[i - r] = animateble;
+                        if (r > 0)
+                        {
+                            _animatebles[i - r] = animateble;
+                            _animatebles[i] = null;
+                        }
+
+                        animateble.AdvanceTime(passedTime);
                     }
                     else
                     {
@@ -176,7 +159,24 @@ namespace DragonBones
                     }
                 }
 
-                _animatebles.ResizeList(l - r, null);
+                if (r > 0)
+                {
+                    l = _animatebles.Count;
+                    for (; i < l; ++i)
+                    {
+                        var animateble = _animatebles[i];
+                        if (animateble != null)
+                        {
+                            _animatebles[i - r] = animateble;
+                        }
+                        else
+                        {
+                            r++;
+                        }
+                    }
+
+                    _animatebles.ResizeList(l - r, null);
+                }
             }
         }
         /// <summary>

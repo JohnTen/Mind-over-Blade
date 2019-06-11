@@ -20,41 +20,10 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace DragonBones
 {
-    /// <internal/>
-    /// <private/>
-    public class VerticesData
-    {
-        public bool isShared;
-        public bool inheritDeform;
-        public int offset;
-        public DragonBonesData data;
-        public WeightData weight; // Initial value.
-
-        public void Clear()
-        {
-            if (!this.isShared && this.weight != null)
-            {
-                this.weight.ReturnToPool();
-            }
-
-            this.isShared = false;
-            this.inheritDeform = false;
-            this.offset = 0;
-            this.data = null;
-            this.weight = null;
-        }
-
-        public void ShareFrom(VerticesData value)
-        {
-            this.isShared = true;
-            this.offset = value.offset;
-            this.weight = value.weight;
-        }
-    }
     /// <internal/>
     /// <private/>
     public abstract class DisplayData : BaseObject
@@ -62,8 +31,8 @@ namespace DragonBones
         public DisplayType type;
         public string name;
         public string path;
-        public SkinData parent;
         public readonly Transform transform = new Transform();
+        public SkinData parent;
 
         protected override void _OnClear()
         {
@@ -103,8 +72,7 @@ namespace DragonBones
         {
             base._OnClear();
 
-            foreach (var action in this.actions)
-            {
+            foreach (var action in this.actions) {
                 action.ReturnToPool();
             }
 
@@ -119,22 +87,29 @@ namespace DragonBones
         {
             this.actions.Add(value);
         }
-    }
+}
 
     /// <internal/>
     /// <private/>
-    public class MeshDisplayData : DisplayData
+    public class MeshDisplayData : ImageDisplayData
     {
-        public readonly VerticesData vertices = new VerticesData();
-        public TextureData texture;
+        public bool inheritAnimation;
+        public int offset; // IntArray.
+        internal WeightData weight = null; // Initial value.
 
         protected override void _OnClear()
         {
             base._OnClear();
 
+            if (this.weight != null)
+            {
+                this.weight.ReturnToPool();
+            }
+
             this.type = DisplayType.Mesh;
-            this.vertices.Clear();
-            this.texture = null;
+            this.inheritAnimation = false;
+            this.offset = 0;
+            this.weight = null;
         }
     }
 
@@ -155,27 +130,6 @@ namespace DragonBones
 
             this.type = DisplayType.BoundingBox;
             this.boundingBox = null;
-        }
-    }
-    
-    /// <internal/>
-    /// <private/>
-    public class PathDisplayData : DisplayData
-    {
-        public bool closed;
-        public bool constantSpeed;
-        public readonly VerticesData vertices = new VerticesData();
-        public readonly List<float> curveLengths = new List<float>();
-
-        protected override void _OnClear()
-        {
-            base._OnClear();
-
-            this.type = DisplayType.Path;
-            this.closed = false;
-            this.constantSpeed = false;
-            this.vertices.Clear();
-            this.curveLengths.Clear();
         }
     }
 

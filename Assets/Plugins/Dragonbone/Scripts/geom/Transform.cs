@@ -37,21 +37,20 @@ namespace DragonBones
     /// <language>zh_CN</language>
     public class Transform
     {
+        internal static readonly float PI = 3.141593f;
         /// <private/>
-        public static readonly float PI = 3.141593f;
+        internal static readonly float PI_D = PI * 2.0f;
         /// <private/>
-        public static readonly float PI_D = PI * 2.0f;
+        internal static readonly float PI_H = PI / 2.0f;
         /// <private/>
-        public static readonly float PI_H = PI / 2.0f;
+        internal static readonly float PI_Q = PI / 4.0f;
         /// <private/>
-        public static readonly float PI_Q = PI / 4.0f;
+        internal static readonly float RAD_DEG = 180.0f / PI;
         /// <private/>
-        public static readonly float RAD_DEG = 180.0f / PI;
-        /// <private/>
-        public static readonly float DEG_RAD = PI / 180.0f;
+        internal static readonly float DEG_RAD = PI / 180.0f;
 
         /// <private/>
-        public static float NormalizeRadian(float value)
+        internal static float NormalizeRadian(float value)
         {
             value = (value + PI) % (PI * 2.0f);
 
@@ -146,7 +145,7 @@ namespace DragonBones
         }
 
         /// <private/>
-        public Transform CopyFrom(Transform value)
+        internal Transform CopyFrom(Transform value)
         {
             this.x = value.x;
             this.y = value.y;
@@ -159,7 +158,7 @@ namespace DragonBones
         }
 
         /// <private/>
-        public Transform Identity()
+        internal Transform Identity()
         {
             this.x = this.y = 0.0f;
             this.skew = this.rotation = 0.0f;
@@ -169,7 +168,7 @@ namespace DragonBones
         }
 
         /// <private/>
-        public Transform Add(Transform value)
+        internal Transform Add(Transform value)
         {
             this.x += value.x;
             this.y += value.y;
@@ -182,7 +181,7 @@ namespace DragonBones
         }
 
         /// <private/>
-        public Transform Minus(Transform value)
+        internal Transform Minus(Transform value)
         {
             this.x -= value.x;
             this.y -= value.y;
@@ -195,7 +194,7 @@ namespace DragonBones
         }
 
         /// <private/>
-        public Transform FromMatrix(Matrix matrix)
+        internal Transform FromMatrix(Matrix matrix)
         {
             var backupScaleX = this.scaleX;
             var backupScaleY = this.scaleY;
@@ -205,16 +204,6 @@ namespace DragonBones
 
             var skewX = (float)Math.Atan(-matrix.c / matrix.d);
             this.rotation = (float)Math.Atan(matrix.b / matrix.a);
-
-            if(float.IsNaN(skewX))
-            {
-                skewX = 0.0f;
-            }
-
-            if(float.IsNaN(this.rotation))
-            {
-                this.rotation = 0.0f; 
-            }
 
             this.scaleX = (float)((this.rotation > -PI_Q && this.rotation < PI_Q) ? matrix.a / Math.Cos(this.rotation) : matrix.b / Math.Sin(this.rotation));
             this.scaleY = (float)((skewX > -PI_Q && skewX < PI_Q) ? matrix.d / Math.Cos(skewX) : -matrix.c / Math.Sin(skewX));
@@ -239,38 +228,40 @@ namespace DragonBones
         /// <private/>
         public Transform ToMatrix(Matrix matrix)
         {
-            if(this.rotation == 0.0f)
-            {
-                matrix.a = 1.0f;
-                matrix.b = 0.0f;
-            }
-            else
+            if (this.skew != 0.0f || this.rotation != 0.0f)
             {
                 matrix.a = (float)Math.Cos(this.rotation);
                 matrix.b = (float)Math.Sin(this.rotation);
-            }
 
-            if(this.skew == 0.0f)
-            {
-                matrix.c = -matrix.b;
-                matrix.d = matrix.a;
+                if (this.skew == 0.0f)
+                {
+                    matrix.c = -matrix.b;
+                    matrix.d = matrix.a;
+                }
+                else
+                {
+                    matrix.c = -(float)Math.Sin(this.skew + this.rotation);
+                    matrix.d = (float)Math.Cos(this.skew + this.rotation);
+                }
+
+                if (this.scaleX != 1.0f)
+                {
+                    matrix.a *= this.scaleX;
+                    matrix.b *= this.scaleX;
+                }
+
+                if (this.scaleY != 1.0f)
+                {
+                    matrix.c *= this.scaleY;
+                    matrix.d *= this.scaleY;
+                }
             }
             else
             {
-                matrix.c = -(float)Math.Sin(this.skew + this.rotation);
-                matrix.d = (float)Math.Cos(this.skew + this.rotation);
-            }
-
-            if(this.scaleX != 1.0f)
-            {
-                matrix.a *= this.scaleX;
-                matrix.b *= this.scaleX;
-            }
-
-            if(this.scaleY != 1.0f)
-            {
-                matrix.c *= this.scaleY;
-                matrix.d *= this.scaleY;
+                matrix.a = this.scaleX;
+                matrix.b = 0.0f;
+                matrix.c = 0.0f;
+                matrix.d = this.scaleY;
             }
 
             matrix.tx = this.x;
