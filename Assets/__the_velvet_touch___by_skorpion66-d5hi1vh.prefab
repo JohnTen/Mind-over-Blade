@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bddfbc2febfc06149b527bfce5a34c7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _baseHitPointDamage: 5
+  _baseHitPointDamage: 8
   _baseEnduranceDamage: 5
   sheath: {fileID: 0}
   bladeLength: 1.6
@@ -53,7 +53,7 @@ MonoBehaviour:
   actionDelay: 0.1
   backDistance: 0.8
   sinkingLength: 0
-  hoveringDistance: 35
+  hoveringDistance: 40
   hoveringRotateSpeed: -720
   hoveringDuration: 5
   dragForce: 3
